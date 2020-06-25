@@ -9,38 +9,35 @@ import java.util.Map;
 
 public class ObjectFactory {
 
-    private static ObjectFactory ourInstance = new ObjectFactory();
-    private Config config;
+    private final ApplicationContext context;
     private List<ObjectConfigurer> configurers = new ArrayList<>();
 
-    public static ObjectFactory getOurInstance() {
-        //homemade singleton, anitpattern
-        return ourInstance;
-    }
 
     @SneakyThrows
-    private ObjectFactory() {
-        config = new JavaConfig("com.example.corona2", new HashMap<>(Map.of(Policeman.class, AngryPolicemanImpl.class)));
-        for (Class<? extends ObjectConfigurer> confs : config.getScanner().getSubTypesOf(ObjectConfigurer.class)) {
+    public ObjectFactory(ApplicationContext context) {
+        this.context = context;
+
+        for (Class<? extends ObjectConfigurer> confs : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurer.class)) {
             configurers.add(confs.getDeclaredConstructor().newInstance());
         }
+
     }
 
     /*
 getBean in spring
  */
     @SneakyThrows
-    public <T> T createObject(Class<T> type) {
-        Class<? extends T> implClass = type;
-        if (type.isInterface()) {
-            implClass = config.getImplClass(type);
-        }
+    public <T> T createObject(Class<T> implClass) {
+
         T t = implClass.getDeclaredConstructor().newInstance();
 
-        configurers.forEach(objectConfigurer -> objectConfigurer.configure(t));
-        //ObjectFactory breaks code
-        //would be nice to support singletons
+        configurers.forEach(objectConfigurer -> objectConfigurer.configure(t, context));
+
+        //ObjectFactory doesn’t create itself 
+        // No static things left
+        //try announcer in constructor
 
         return t;
+        //TOO many abstractions?
     }
 }

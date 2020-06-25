@@ -1,8 +1,15 @@
 package com.example.corona2;
 
+@Singleton
 public class AnnouncerImpl implements Announcer {
 
-    private Advisor advisor = ObjectFactory.getOurInstance().createObject(Advisor.class);
+    @InjectByType
+    private Advisor advisor;
+
+    public AnnouncerImpl() {
+        System.out.println(advisor.getClass());
+    }
+
     @Override
     public void announce(String s) {
         advisor.advise();
