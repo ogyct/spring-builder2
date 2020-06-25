@@ -1,5 +1,6 @@
 package com.example.corona2;
 
+@Deprecated
 public class AdvisorImpl implements Advisor {
 
     @InjectProperty

@@ -3,8 +3,10 @@ package com.example.corona2;
 import lombok.SneakyThrows;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,8 +40,22 @@ getBean in spring
 
         invokeInit(implClass, t);
 
-        return t;
-        //TOO many abstractions?
+        //PROXY pattern showcase
+
+        if (implClass.isAnnotationPresent(Deprecated.class)) {
+            return (T) Proxy.newProxyInstance(implClass.getClassLoader(), implClass.getInterfaces(), new InvocationHandler() {
+                @Override
+                public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+                    System.out.println("stop using deprecated stuff");
+                    //async mechanism
+                    //AOP territory
+                    return method.invoke(t);
+
+                }
+            });
+        } else {
+            return t;
+        }
     }
 
     private <T> void invokeInit(Class<T> implClass, T t) throws IllegalAccessException, InvocationTargetException {
