@@ -16,6 +16,7 @@ public class ObjectFactory {
 
     private final ApplicationContext context;
     private List<ObjectConfigurer> configurers = new ArrayList<>();
+    private List<ProxyConfigurer> proxyConfigurers = new ArrayList<>();
 
 
     @SneakyThrows
@@ -24,6 +25,10 @@ public class ObjectFactory {
 
         for (Class<? extends ObjectConfigurer> confs : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurer.class)) {
             configurers.add(confs.getDeclaredConstructor().newInstance());
+        }
+
+        for (Class<? extends ProxyConfigurer> aClass : context.getConfig().getScanner().getSubTypesOf(ProxyConfigurer.class)) {
+            proxyConfigurers.add(aClass.getDeclaredConstructor().newInstance());
         }
 
     }
@@ -40,22 +45,17 @@ getBean in spring
 
         invokeInit(implClass, t);
 
-        //PROXY pattern showcase
 
-        if (implClass.isAnnotationPresent(Deprecated.class)) {
-            return (T) Proxy.newProxyInstance(implClass.getClassLoader(), implClass.getInterfaces(), new InvocationHandler() {
-                @Override
-                public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
-                    System.out.println("stop using deprecated stuff");
-                    //async mechanism
-                    //AOP territory
-                    return method.invoke(t);
+        //refactoring only
+        return wrapWithProxyIfNeeded(implClass, t);
+    }
 
-                }
-            });
-        } else {
-            return t;
+    private <T> T wrapWithProxyIfNeeded(Class<T> implClass, T t) {
+
+        for (ProxyConfigurer proxyConfigurer : proxyConfigurers) {
+            t = (T) proxyConfigurer.replaceWithProxyIfNeeded(t, implClass);
         }
+        return t;
     }
 
     private <T> void invokeInit(Class<T> implClass, T t) throws IllegalAccessException, InvocationTargetException {
