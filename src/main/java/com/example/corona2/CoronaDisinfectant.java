@@ -1,12 +1,16 @@
 package com.example.corona2;
 
 public class CoronaDisinfectant {
+
+    private Announcer announcer = new AnnouncerImpl();
+    private Policeman policeman = new PolicemanImpl();
+
     public void start () {
-        // todo alert everyone about disinfection and ask them to go away
-        // todo additionally ask everyone who didn't listen for the first time
+        announcer.announce("starting disinfection, all out!");
+        policeman.makePeopleLeave();
 
         disinfect();
-        // todo  alert everyone they can go back
+        announcer.announce("risk it, get back!");
 
     }
 
