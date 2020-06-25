@@ -1,12 +1,15 @@
 package com.example.corona2;
 
+import javax.annotation.PostConstruct;
+
 @Singleton
 public class AnnouncerImpl implements Announcer {
 
     @InjectByType
     private Advisor advisor;
 
-    public AnnouncerImpl() {
+    @PostConstruct
+    public void init() {
         System.out.println(advisor.getClass());
     }
 

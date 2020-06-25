@@ -2,6 +2,9 @@ package com.example.corona2;
 
 import lombok.SneakyThrows;
 
+import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,15 +32,29 @@ getBean in spring
     @SneakyThrows
     public <T> T createObject(Class<T> implClass) {
 
-        T t = implClass.getDeclaredConstructor().newInstance();
+        T t = create(implClass);
 
-        configurers.forEach(objectConfigurer -> objectConfigurer.configure(t, context));
+        configure(t);
 
-        //ObjectFactory doesn’t create itself 
-        // No static things left
-        //try announcer in constructor
+        invokeInit(implClass, t);
 
         return t;
         //TOO many abstractions?
+    }
+
+    private <T> void invokeInit(Class<T> implClass, T t) throws IllegalAccessException, InvocationTargetException {
+        for (Method method : implClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(PostConstruct.class)) {
+                method.invoke(t);
+            }
+        }
+    }
+
+    private <T> void configure(T t) {
+        configurers.forEach(objectConfigurer -> objectConfigurer.configure(t, context));
+    }
+
+    private <T> T create(Class<T> implClass) throws InstantiationException, IllegalAccessException, java.lang.reflect.InvocationTargetException, NoSuchMethodException {
+        return implClass.getDeclaredConstructor().newInstance();
     }
 }
