@@ -10,8 +10,6 @@ public class ObjectFactory {
     private static ObjectFactory ourInstance = new ObjectFactory();
     private Config config;
 
-
-
     public static ObjectFactory getOurInstance() {
         //homemade singleton, anitpattern
         return ourInstance;
